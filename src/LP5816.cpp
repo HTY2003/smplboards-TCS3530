@@ -7,8 +7,8 @@ bool LP5816::begin(LP5816_max_current max_current, LP5816_channel_en channel_en,
     reset();
     delay(5);
 
-    setEnable();
-    if (!getEnable())
+    enable();
+    if (!getEnabled())
         return false;
 
     setMaxCurrent(max_current);
@@ -53,30 +53,30 @@ void LP5816::setPWMConfig(LP5816_pwm_config pwm_config) {
     updateDevConfig();
 }
 
-void LP5816::setOneCurrentPct(LP5816_channel channel, uint8_t current_pct) {
+void LP5816::setOneCurrent(LP5816_channel channel, uint8_t current) {
     switch (channel) {
         case LP5816_CH_0:
-            i2c_write8(I2C_ADDR, reg::REG_OUT0_DC, current_pct);
+            i2c_write8(I2C_ADDR, reg::REG_OUT0_DC, current);
             break;
 
         case LP5816_CH_1:
-            i2c_write8(I2C_ADDR, reg::REG_OUT1_DC, current_pct);
+            i2c_write8(I2C_ADDR, reg::REG_OUT1_DC, current);
             break;
 
         case LP5816_CH_2:
-            i2c_write8(I2C_ADDR, reg::REG_OUT2_DC, current_pct);
+            i2c_write8(I2C_ADDR, reg::REG_OUT2_DC, current);
             break;
 
         case LP5816_CH_3:
-            i2c_write8(I2C_ADDR, reg::REG_OUT3_DC, current_pct);
+            i2c_write8(I2C_ADDR, reg::REG_OUT3_DC, current);
             break;
     }
 }
 
-void LP5816::setAllCurrentPct(uint8_t current_pct) {
+void LP5816::setAllCurrent(uint8_t current) {
     uint8_t buffer[NUM_LEDS];
     for (int i = 0; i < NUM_LEDS; i++) {
-        buffer[i] = current_pct;
+        buffer[i] = current;
     }
     i2c_write(I2C_ADDR, reg::REG_OUT0_DC, buffer, NUM_LEDS);
 }
@@ -110,18 +110,18 @@ void LP5816::setAllDutyCycle(uint8_t duty_cycle) {
 }
 
 void LP5816::setOutput(LP5816_output output) {
-    i2c_write(I2C_ADDR, reg::REG_OUT0_DC, &output.ch0_current_pct, NUM_LEDS * 2);
+    i2c_write(I2C_ADDR, reg::REG_OUT0_DC, &output.ch0_current, NUM_LEDS * 2);
 }
 
 void LP5816::updateDevConfig() {
     i2c_write8(I2C_ADDR, reg::REG_UPDATE_CMD, 0x55);
 }
 
-void LP5816::setEnable() {
+void LP5816::enable() {
     i2c_write8(I2C_ADDR, reg::REG_CHIP_EN, 0x1);
 }
 
-bool LP5816::getEnable() {
+bool LP5816::getEnabled() {
     return i2c_read8(I2C_ADDR, reg::REG_CHIP_EN) == 0x1;
 }
 

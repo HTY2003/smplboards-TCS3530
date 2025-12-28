@@ -68,10 +68,10 @@ typedef struct
 // LP5816 output
 typedef struct
 {
-    uint8_t ch0_current_pct;
-    uint8_t ch1_current_pct;
-    uint8_t ch2_current_pct;
-    uint8_t ch3_current_pct;
+    uint8_t ch0_current;
+    uint8_t ch1_current;
+    uint8_t ch2_current;
+    uint8_t ch3_current;
 
     uint8_t ch0_duty_cycle;
     uint8_t ch1_duty_cycle;
@@ -112,20 +112,20 @@ class LP5816
     public:
         LP5816(TwoWire& wire);
         bool        begin(LP5816_max_current max_current, LP5816_channel_en channel_en, LP5816_pwm_config pwm_config);
-        void        reset();
         void        setMaxCurrent(LP5816_max_current max_current);
         void        setChannelEnable(LP5816_channel_en channel_en);
         void        setPWMConfig(LP5816_pwm_config pwm_config);
-        void        setOneCurrentPct(LP5816_channel channel, uint8_t current_pct);
-        void        setAllCurrentPct(uint8_t current_pct);
+        void        setOneCurrent(LP5816_channel channel, uint8_t current);
+        void        setAllCurrent(uint8_t current);
         void        setOneDutyCycle(LP5816_channel channel, uint8_t duty_cycle);
         void        setAllDutyCycle(uint8_t duty_cycle);
         void        setOutput(LP5816_output output);
         
     private:
+        void        reset();
         void        updateDevConfig();
-        void        setEnable();
-        bool        getEnable();
+        void        enable();
+        bool        getEnabled();
 
         void        i2c_write8(uint8_t addr, uint8_t reg, uint8_t payload);
         uint8_t     i2c_read8(uint8_t addr, uint8_t reg);
