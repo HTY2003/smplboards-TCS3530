@@ -38,45 +38,24 @@ typedef enum
     LP5816_CH_1,
     LP5816_CH_2,
     LP5816_CH_3
-} LP5816_channel;
+} LP5816_ch;
 
-// LP5816 channel enable
+// LP5816 configuration
 typedef struct
-{
-    bool ch0_en;
-    bool ch1_en;
-    bool ch2_en;
-    bool ch3_en;   
-} LP5816_channel_en;
-
-// LP5816 PWM config
-typedef struct
-{
+{   
+    LP5816_max_current max_current;
     LP5816_fade_time fade_time;
+    bool fade_en[4];
+    bool exp_dim_en[4];
+    bool channel_en[4];
+} LP5816_config;
 
-    bool ch0_fade_en;
-    bool ch1_fade_en;
-    bool ch2_fade_en;
-    bool ch3_fade_en;
-
-    bool ch0_exp_dim_en;
-    bool ch1_exp_dim_en;
-    bool ch2_exp_dim_en;
-    bool ch3_exp_dim_en;
-} LP5816_pwm_config;
 
 // LP5816 output
 typedef struct
 {
-    uint8_t ch0_current;
-    uint8_t ch1_current;
-    uint8_t ch2_current;
-    uint8_t ch3_current;
-
-    uint8_t ch0_duty_cycle;
-    uint8_t ch1_duty_cycle;
-    uint8_t ch2_duty_cycle;
-    uint8_t ch3_duty_cycle;
+    uint8_t current[4];
+    uint8_t duty_cycle[4];
 } LP5816_output;
 
 class LP5816
@@ -111,25 +90,18 @@ class LP5816
 
     public:
         LP5816(TwoWire& wire);
-        bool        begin(LP5816_max_current max_current, LP5816_channel_en channel_en, LP5816_pwm_config pwm_config);
-        void        setMaxCurrent(LP5816_max_current max_current);
-        void        setChannelEnable(LP5816_channel_en channel_en);
-        void        setPWMConfig(LP5816_pwm_config pwm_config);
-        void        setOneCurrent(LP5816_channel channel, uint8_t current);
-        void        setAllCurrent(uint8_t current);
-        void        setOneDutyCycle(LP5816_channel channel, uint8_t duty_cycle);
-        void        setAllDutyCycle(uint8_t duty_cycle);
-        void        setOutput(LP5816_output output);
+        bool        begin(const LP5816_config& config);
+        void        setConfig(const LP5816_config& config);
+        void        setOutput(const LP5816_output& output);
         
     private:
         void        reset();
-        void        updateDevConfig();
         void        enable();
-        bool        getEnabled();
+        bool        checkEnabled();
 
         void        i2c_write8(uint8_t addr, uint8_t reg, uint8_t payload);
         uint8_t     i2c_read8(uint8_t addr, uint8_t reg);
-        void        i2c_write(uint8_t addr, uint8_t reg, uint8_t buffer[], uint8_t length);
+        void        i2c_write(uint8_t addr, uint8_t reg, const uint8_t buffer[], uint8_t length);
         void        i2c_read(uint8_t addr, uint8_t reg, uint8_t buffer[], uint8_t length);
 
         TwoWire& _wire;

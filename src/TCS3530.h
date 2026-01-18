@@ -9,25 +9,70 @@ typedef enum {
     TCS3530_LONG,
     TCS3530_FAST,
     TCS3530_FAST_LONG,
-    TCS3530_VSYNC,
-}  TCS3530_trigger_timing;
+    TCS3530_VSYNC
+}  TCS3530_trigger_mode;
 
-typedef struct {
-    uint16_t x;
-    uint16_t y;
-    uint16_t z;
-    uint16_t ir;
-    uint16_t hgl;
-    uint16_t hgh;
-    uint16_t clear;
-    uint16_t flicker;
-} TCS3530_data;
+typedef enum {
+    TCS3530_X,
+    TCS3530_Y,
+    TCS3530_Z,
+    TCS3530_IR,
+    TCS3530_HGL,
+    TCS3530_HGH,
+    TCS3530_CLEAR,
+    TCS3530_FLICKER
+}  TCS3530_als_ch;
 
+typedef enum {
+    TCS3530_L,
+    TCS3530_A,
+    TCS3530_B
+}  TCS3530_lab_ch;
+
+// Sensor Configuration
 typedef struct {
-    float l;
-    float a;
-    float b;
-} TCS3530_lab_result;
+    TCS3530_trigger_mode trigger_mode;
+    uint8_t wait_time;
+    uint16_t sample_time;
+    uint16_t sample_count;
+    uint8_t gain[8];
+    // bool fifo_int_en;
+    // bool als_int_en;
+    // bool mod_int_en;
+    // TCS3530_als_ch als_ch;
+    // uint16_t als_low_thr;
+    // uint16_t als_high_thr;
+} TCS3530_config;
+
+// Sensor Status
+typedef struct {
+    // bool fifo_int;
+    // bool als_int;
+    // bool mod_int;
+    // bool als_int_low;
+    // bool als_int_high;
+    // bool mod_digital_sat_any;
+    bool mod_analog_sat_any;
+    bool mod_analog_sat[8];
+    bool fifo_overflow;
+} TCS3530_status;
+
+// Raw Sensor Readings
+typedef struct {
+    uint16_t data[8];
+} TCS3530_raw_data;
+
+// Normalized Sensor Readings
+typedef struct {
+    uint16_t low[8];
+    uint16_t high[8];
+    float data[8];
+} TCS3530_norm_data;
+
+// CIELAB Readings
+typedef struct {
+    float data[3];
+} TCS3530_lab_data;
 
 class TCS3530
 {
@@ -165,36 +210,38 @@ class TCS3530
             REG_MOD_FIFO_DATA_CFG5 = 0xF9,
             REG_MOD_FIFO_DATA_CFG6 = 0xFA,
             REG_MOD_FIFO_DATA_CFG7 = 0xFB,
-            REG_FIFO_STATUS0_H = 0xFC,
-            REG_FIFO_STATUS0_L = 0xFD,
+            REG_FIFO_STATUS0 = 0xFC,
             REG_FIFO_STATUS1 = 0xFD,
             REG_FIFO_DATA_PROTOCOL = 0xFE,
             REG_FIFO_DATA = 0xFF
         } reg;
 
     public:
-        TCS3530(TwoWire& wire, int int_pin = -1, int vsync_pin = -1);
-        bool        begin();
-        void        reset();
-        void        enable();
-        void        setWaitTime(uint8_t wtime, TCS3530_trigger_timing trigger_timing);
-        void        setMeasurementTime(uint16_t sample_time_step, uint16_t sample_count);
-        void        setGain(uint8_t gain);
+        TCS3530(TwoWire& wire);
+        bool        begin(const TCS3530_config& config);
+        void        setConfig(const TCS3530_config& config);
+        bool        updateRawData(TCS3530_raw_data& raw);
+        void        convertRawToNorm(const TCS3530_raw_data& raw, TCS3530_norm_data& result);
+        void        convertNormToLab(const TCS3530_norm_data& norm, TCS3530_lab_data& result);
+        void        getStatus(TCS3530_status& status);
+        // void        clearInterrupts();
 
-        void        getData(TCS3530_data *data);
-        void        convertDataToLab(TCS3530_data *data, TCS3530_lab_result *result);
-        int         getID();
-        
     private:
-        float convertToLabHelper(float in);
-
-        void i2c_write8(uint8_t addr, uint8_t reg, uint8_t payload);
-        uint8_t i2c_read8(uint8_t addr, uint8_t reg);
-        void i2c_write(uint8_t addr, uint8_t reg, uint8_t buffer[], uint8_t length);
-        void i2c_read(uint8_t addr, uint8_t reg, uint8_t buffer[], uint8_t length);
+        void        reset();
+        void        enablePON();
+        void        enableALS();
+        void        disableALS();
+        int         getID();
+        void        setFIFOThreshold(uint16_t fifo_thr);
+        void        clearFIFO();
+        float       convertToLabHelper(float in);
+        // void        setALSThreshold(uint16_t als_low_thr, uint16_t als_high_thr);
+        void        i2c_write8(uint8_t addr, uint8_t reg, uint8_t payload);
+        uint8_t     i2c_read8(uint8_t addr, uint8_t reg);
+        void        i2c_write(uint8_t addr, uint8_t reg, const uint8_t buffer[], uint8_t length);
+        void        i2c_read(uint8_t addr, uint8_t reg, uint8_t buffer[], uint8_t length);
 
         TwoWire& _wire;
-        int _int, _vsync;
         float _delta_cubed = 216.0 / 24389.0;
         float _delta_squared = 36.0 / 841.0;
         float _const = 4.0 / 29.0;
