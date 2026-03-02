@@ -31,6 +31,8 @@ This board consists of a TCS3530 sensor, but also an LP5816 LED driver to contro
 
 ### Structs
 
+The library uses structs to organize groups of data to be passed into or modified by functions, each listed below:
+
 * `LP5816_config`: Driver configuration
   * `LP5816_max_current max_current`: Maximum current per LED channel (represents 100% current, see `LP5816_max_current` enum for options)
   * `LP5816_fade_time fade_time`: Time taken by driver to transition between PWM duty cycle values (see `LP5816_fade_time` for options)
@@ -107,7 +109,7 @@ Writes driver output to LED driver.
 
 ### Structs
 
-Additionally, the library uses structs to organize groups of data to be passed into or modified by functions, each listed below:
+The library uses structs to organize groups of data to be passed into or modified by functions, each listed below:
 
 * `TCS3530_config`: Sensor configuration
   * `TCS3530_trigger_mode trigger_mode`: Amount of time represented as 1 wait time step (see `TCS3530_trigger_mode` enum for options).
